@@ -1,0 +1,161 @@
+{
+  "type": "FeatureCollection",
+  "schema_version": 1,
+  "revision": 1,
+  "attribution": "Dallini owner bumps",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "owner:bump-baghdad-01",
+      "properties": {
+        "kind": "bump",
+        "subtype": "bump",
+        "source": "osm",
+        "source_date": "2026-10-28"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          44.3496013,
+          33.317786
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "owner:bump-baghdad-02",
+      "properties": {
+        "kind": "bump",
+        "subtype": "bump",
+        "source": "osm",
+        "source_date": "2026-10-28"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          44.345612,
+          33.3200254
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "owner:bump-baghdad-03",
+      "properties": {
+        "kind": "bump",
+        "subtype": "bump",
+        "source": "osm",
+        "source_date": "2026-10-28"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          44.3451293,
+          33.3200806
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "owner:bump-baghdad-04",
+      "properties": {
+        "kind": "bump",
+        "subtype": "choker",
+        "source": "osm",
+        "source_date": "2026-10-28"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          44.3363507,
+          33.3173405
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "owner:bump-baghdad-05",
+      "properties": {
+        "kind": "bump",
+        "subtype": "yes",
+        "source": "osm",
+        "source_date": "2026-10-28"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          44.2802405,
+          33.3906785
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "owner:bump-baghdad-06",
+      "properties": {
+        "kind": "bump",
+        "subtype": "hump",
+        "source": "osm",
+        "source_date": "2026-10-28"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          44.5246413,
+          33.5004345
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "owner:bump-baghdad-07",
+      "properties": {
+        "kind": "bump",
+        "subtype": "bump",
+        "source": "osm",
+        "source_date": "2026-10-28"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          44.6950396,
+          33.1196825
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "owner:bump-baghdad-08",
+      "properties": {
+        "kind": "bump",
+        "subtype": "bump",
+        "source": "osm",
+        "source_date": "2026-10-28"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          44.6865393,
+          33.1280453
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "owner:bump-baghdad-09",
+      "properties": {
+        "kind": "bump",
+        "subtype": "bump",
+        "source": "osm",
+        "source_date": "2026-10-28"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          44.6836774,
+          33.1306228
+        ]
+      }
+    }
+  ]
+}
