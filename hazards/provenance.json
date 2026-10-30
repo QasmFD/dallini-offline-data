@@ -1,15 +1,15 @@
 {
-  "asset": "road-hazards.geojson",
+  "asset": "extracted.geojson",
   "bytes": 1859441,
-  "sha256": "e9e2cf211d80a5d5916314f29dce86e0efd290a37a4a43f1575e5e5b72e938ba",
-  "source": "iraq-261028.osm.pbf",
+  "sha256": "4992483bbee0458e8e0c07720d396f0ddae89039acb37bf2be21879c2ebe7e83",
+  "source": "iraq-latest.osm.pbf",
   "source_url": "https://download.geofabrik.de/asia/iraq.html",
-  "osm_timestamp": "2026-10-28T21:21:02Z",
-  "source_sha256": "2e0dfde805f002ee77913fe1b9ee60737752538446255a8934dd5cf2c526f2d0",
-  "source_md5": "c0b51e95f7714538175bf8bee201c9b9",
+  "osm_timestamp": "2026-10-29T21:21:26Z",
+  "source_sha256": "8c787a5618efba9cf78a1b95f0947eca615793fe1d0d7ac413d96e4862366572",
+  "source_md5": "5b566a253b1e5c93a8df18c02cd10d05",
   "published_md5_verified": true,
   "latest_snapshot_verified": true,
-  "verified_at": "2026-10-30T03:16:33+00:00",
+  "verified_at": "2026-10-30T10:57:13+00:00",
   "license": "ODbL-1.0",
   "features_by_kind": {
     "police_station": 3042,
@@ -22,17 +22,18 @@
   "geometry_policy": "Mapped node coordinates; midpoint for linear ways; interior representative point for mapped areas. No fabricated objects or coordinates.",
   "schema": 1,
   "display_snapshot": {
-    "revision": 1,
+    "revision": 2,
     "bytes": 1859556,
-    "sha256": "dbe4a2e04f538232aff78135c32cbfe056aa0e108e547d2f6336df7e3b2ed5c2",
+    "sha256": "8f85377c124f44c27611e9dddc49612888a72c1c25f9d31bff6b2a2f81726532",
     "features": 4882,
-    "osm_timestamp": "2026-10-28T21:21:02Z",
-    "source_sha256": "2e0dfde805f002ee77913fe1b9ee60737752538446255a8934dd5cf2c526f2d0",
+    "osm_timestamp": "2026-10-29T21:21:26Z",
+    "source_sha256": "8c787a5618efba9cf78a1b95f0947eca615793fe1d0d7ac413d96e4862366572",
     "features_by_kind": {
       "police_station": 3042,
       "police_checkpoint": 218,
       "speed_bump": 1226,
       "speed_camera": 396
     }
-  }
+  },
+  "refreshed_at": "2026-10-30T10:57:13.703447+00:00"
 }
