@@ -35,8 +35,13 @@ def checksum(text):
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
-    def redirect_request(self, *args, **kwargs):
-        raise ValueError('Unexpected source redirect')
+    """Only Geofabrik's latest-to-dated PBF alias may redirect, once."""
+    def redirect_request(self, request, fp, code, msg, headers, newurl):
+        if (request.full_url != ORIGIN + 'iraq-latest.osm.pbf' or request.get_method() != 'GET'
+                or code not in (301, 302, 303, 307, 308)
+                or re.fullmatch(re.escape(ORIGIN) + r'iraq-\d{6}\.osm\.pbf', newurl) is None):
+            raise ValueError('Unexpected source redirect')
+        return super().redirect_request(request, fp, code, msg, headers, newurl)
 
 
 def fetch(name, limit, output=None):

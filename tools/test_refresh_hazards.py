@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 import unittest
+import urllib.request
 
 import refresh_hazards as refresh
 
@@ -51,6 +52,20 @@ class RefreshTests(unittest.TestCase):
         for value in ('a'*32 + ' other.osm.pbf', '<html>Error</html>'):
             with self.assertRaises(ValueError): refresh.checksum(value)
         with self.assertRaises(ValueError): refresh.page_timestamp('missing source date')
+
+    def test_source_redirect_allows_only_one_official_dated_extract(self):
+        handler = refresh.NoRedirect()
+        request = urllib.request.Request(refresh.ORIGIN + 'iraq-latest.osm.pbf')
+        target = refresh.ORIGIN + 'iraq-261028.osm.pbf'
+        redirected = handler.redirect_request(request, None, 302, 'Found', {}, target)
+        self.assertEqual(target, redirected.full_url)
+        for url in ('http://download.geofabrik.de/asia/iraq-261028.osm.pbf',
+                    'https://example.com/iraq-261028.osm.pbf',
+                    refresh.ORIGIN + 'iran-261028.osm.pbf', target + '?extra=1'):
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                handler.redirect_request(request, None, 302, 'Found', {}, url)
+        with self.assertRaises(ValueError):
+            handler.redirect_request(redirected, None, 302, 'Found', {}, target)
 
 
 if __name__ == '__main__':
