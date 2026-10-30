@@ -1,0 +1,38 @@
+{
+  "asset": "road-hazards.geojson",
+  "bytes": 1859441,
+  "sha256": "e9e2cf211d80a5d5916314f29dce86e0efd290a37a4a43f1575e5e5b72e938ba",
+  "source": "iraq-261028.osm.pbf",
+  "source_url": "https://download.geofabrik.de/asia/iraq.html",
+  "osm_timestamp": "2026-10-28T21:21:02Z",
+  "source_sha256": "2e0dfde805f002ee77913fe1b9ee60737752538446255a8934dd5cf2c526f2d0",
+  "source_md5": "c0b51e95f7714538175bf8bee201c9b9",
+  "published_md5_verified": true,
+  "latest_snapshot_verified": true,
+  "verified_at": "2026-10-30T03:16:33+00:00",
+  "license": "ODbL-1.0",
+  "features_by_kind": {
+    "police_station": 3042,
+    "police_checkpoint": 218,
+    "speed_bump": 1226,
+    "speed_camera": 396
+  },
+  "invalid_geometry": 0,
+  "coverage": "All relevant source-recorded nodes, ways, and areas in the Iraq extract. OSM survey coverage is incomplete; these are not live officer locations.",
+  "geometry_policy": "Mapped node coordinates; midpoint for linear ways; interior representative point for mapped areas. No fabricated objects or coordinates.",
+  "schema": 1,
+  "display_snapshot": {
+    "revision": 1,
+    "bytes": 1859556,
+    "sha256": "dbe4a2e04f538232aff78135c32cbfe056aa0e108e547d2f6336df7e3b2ed5c2",
+    "features": 4882,
+    "osm_timestamp": "2026-10-28T21:21:02Z",
+    "source_sha256": "2e0dfde805f002ee77913fe1b9ee60737752538446255a8934dd5cf2c526f2d0",
+    "features_by_kind": {
+      "police_station": 3042,
+      "police_checkpoint": 218,
+      "speed_bump": 1226,
+      "speed_camera": 396
+    }
+  }
+}

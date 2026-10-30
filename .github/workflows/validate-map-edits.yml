@@ -20,7 +20,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Test the public-data validator
-        run: python3 -m unittest discover -s tools -p 'test_validate_map_edits.py'
+        run: python3 -m unittest discover -s tools -p 'test_validate*.py'
       - name: Validate both complete snapshots and independent revisions
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -40,3 +40,16 @@ jobs:
               python3 tools/validate_map_edits.py "$current_file" --feed "$feed"
             fi
           done
+      - name: Validate national source signs
+        env:
+          PREVIOUS_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          file=hazards/road-hazards.geojson
+          if [[ "$PREVIOUS_SHA" =~ ^[0-9a-f]{40}$ ]] && git cat-file -e "$PREVIOUS_SHA:$file" 2>/dev/null; then
+            git show "$PREVIOUS_SHA:$file" > "$RUNNER_TEMP/previous-hazards.json"
+            python3 tools/validate_hazards.py "$file" --previous "$RUNNER_TEMP/previous-hazards.json"
+          else
+            python3 tools/validate_hazards.py "$file"
+          fi
