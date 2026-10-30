@@ -21,17 +21,22 @@ jobs:
           persist-credentials: false
       - name: Test the public-data validator
         run: python3 -m unittest discover -s tools -p 'test_validate_map_edits.py'
-      - name: Validate complete snapshot and revision
+      - name: Validate both complete snapshots and independent revisions
         env:
           EVENT_NAME: ${{ github.event_name }}
           PREVIOUS_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "$EVENT_NAME" != "workflow_dispatch" && "$PREVIOUS_SHA" =~ ^[0-9a-f]{40}$ && "$PREVIOUS_SHA" != "0000000000000000000000000000000000000000" ]] && git cat-file -e "$PREVIOUS_SHA:edits/map.geojson" 2>/dev/null; then
-            previous_file="$RUNNER_TEMP/previous-owner-map.geojson"
-            git show "$PREVIOUS_SHA:edits/map.geojson" > "$previous_file"
-            python3 tools/validate_map_edits.py edits/map.geojson --previous "$previous_file"
-          else
-            python3 tools/validate_map_edits.py edits/map.geojson
-          fi
+          for feed in roads bumps; do
+            filename=map.geojson
+            if [[ "$feed" == bumps ]]; then filename=bumps.geojson; fi
+            current_file="edits/$filename"
+            if [[ "$EVENT_NAME" != "workflow_dispatch" && "$PREVIOUS_SHA" =~ ^[0-9a-f]{40}$ && "$PREVIOUS_SHA" != "0000000000000000000000000000000000000000" ]] && git cat-file -e "$PREVIOUS_SHA:$current_file" 2>/dev/null; then
+              previous_file="$RUNNER_TEMP/previous-owner-$filename"
+              git show "$PREVIOUS_SHA:$current_file" > "$previous_file"
+              python3 tools/validate_map_edits.py "$current_file" --feed "$feed" --previous "$previous_file"
+            else
+              python3 tools/validate_map_edits.py "$current_file" --feed "$feed"
+            fi
+          done

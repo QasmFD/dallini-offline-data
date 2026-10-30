@@ -206,5 +206,127 @@ class TestOwnerMapEdits(unittest.TestCase):
             self.assertEqual(original, output.read_bytes())
 
 
+def bumps_collection():
+    return json.loads((Path(__file__).parent / 'fixtures/baghdad-bumps-schema1.geojson').read_text(encoding='utf-8'))
+
+
+class TestOwnerBumps(unittest.TestCase):
+    def test_actual_published_nine_points_preserve_author_metadata(self):
+        value = bumps_collection()
+        self.assertEqual(9, len(value['features']))
+        self.assertEqual(value, validator.parse(encoded(value), feed='bumps'))
+        self.assertEqual({'bump', 'hump', 'choker', 'yes'}, {f['properties']['subtype'] for f in value['features']})
+
+    def test_separate_feeds_cannot_accept_each_others_snapshot(self):
+        with self.assertRaises(ValueError):
+            validator.parse(encoded(bumps_collection()))
+        with self.assertRaises(ValueError):
+            validator.parse(encoded(collection()), feed='bumps')
+        with self.assertRaises(ValueError):
+            validator.parse(encoded(collection()), feed='unknown')
+
+    def test_only_documented_subtypes_are_accepted(self):
+        value = bumps_collection()
+        for subtype in ['bump', 'hump', 'table', 'cushion', 'choker', 'chicane', 'rumble_strip', 'dip', 'yes']:
+            value['features'][0]['properties']['subtype'] = subtype
+            with self.subTest(subtype=subtype):
+                self.assertEqual(value, validator.parse(encoded(value), feed='bumps'))
+        for subtype in ['speed_camera', 'island', '', None, True, 1, ['bump'], 'BUMP']:
+            value['features'][0]['properties']['subtype'] = subtype
+            with self.subTest(subtype=subtype), self.assertRaises(ValueError):
+                validator.parse(encoded(value), feed='bumps')
+
+    def test_source_and_date_are_strict_declarations(self):
+        value = bumps_collection()
+        for key, invalid in [('kind', 'road'), ('source', 'OSM'), ('source', 'verified'), ('source', None),
+                             ('source_date', '2026-02-29'), ('source_date', '1900-02-29'),
+                             ('source_date', '2026-04-31'), ('source_date', '0000-01-01'),
+                             ('source_date', '2026-1-01'), ('source_date', '2026-01-01T00:00:00Z'),
+                             ('source_date', '٢٠٢٦-١٠-٢٨'), ('source_date', None)]:
+            current = copy.deepcopy(value)
+            current['features'][0]['properties'][key] = invalid
+            with self.subTest(key=key, invalid=invalid), self.assertRaises(ValueError):
+                validator.parse(encoded(current), feed='bumps')
+        for date in ['0001-01-01', '2000-02-29', '2024-02-29', '9999-12-31']:
+            value['features'][0]['properties']['source_date'] = date
+            with self.subTest(date=date):
+                self.assertEqual(value, validator.parse(encoded(value), feed='bumps'))
+
+    def test_metadata_is_required_and_private_fields_fail(self):
+        for key in ['kind', 'subtype', 'source', 'source_date']:
+            value = bumps_collection()
+            del value['features'][0]['properties'][key]
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                validator.parse(encoded(value), feed='bumps')
+        for key in ['device_id', 'raw_trace', 'verified', 'source_way_id', 'access']:
+            value = bumps_collection()
+            value['features'][0]['properties'][key] = 'not-public'
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                validator.parse(encoded(value), feed='bumps')
+
+    def test_only_finite_single_point_inside_iraq_envelope(self):
+        for point in [[36.49, 33], [50.51, 33], [44, 26.99], [44, 39.01], [True, 33],
+                      ['44', 33], [44, 33, 1], [[44, 33]], [float('inf'), 33], None]:
+            value = bumps_collection()
+            value['features'][0]['geometry']['coordinates'] = point
+            with self.subTest(point=point), self.assertRaises(ValueError):
+                validator.parse(encoded(value), feed='bumps')
+        value = bumps_collection()
+        value['features'][0]['geometry'] = collection()['features'][0]['geometry']
+        with self.assertRaises(ValueError):
+            validator.parse(encoded(value), feed='bumps')
+        value['features'][0]['geometry'] = {'type': 'Point', 'coordinates': [36.5, 27]}
+        self.assertEqual(value, validator.parse(encoded(value), feed='bumps'))
+
+    def test_shared_id_name_duplicate_byte_and_feature_limits(self):
+        value = bumps_collection()
+        value['features'][0]['properties']['name'] = 'مطب'
+        self.assertEqual(value, validator.parse(encoded(value), feed='bumps'))
+        for name in [' x', '<x>', 'x\u202e', 'x' * 121]:
+            value['features'][0]['properties']['name'] = name
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                validator.parse(encoded(value), feed='bumps')
+        value = bumps_collection()
+        value['features'].append(copy.deepcopy(value['features'][0]))
+        with self.assertRaises(ValueError):
+            validator.parse(encoded(value), feed='bumps')
+        value['features'] = [dict(copy.deepcopy(value['features'][0]), id=f'owner:p{i}') for i in range(2000)]
+        self.assertEqual(2000, len(validator.parse(encoded(value), feed='bumps')['features']))
+        value['features'].append(dict(copy.deepcopy(value['features'][0]), id='owner:extra'))
+        with self.assertRaises(ValueError):
+            validator.parse(encoded(value), feed='bumps')
+        raw = encoded(bumps_collection())
+        with self.assertRaises(ValueError):
+            validator.parse(raw + b' ' * (1048577 - len(raw)), feed='bumps')
+        with self.assertRaises(ValueError):
+            validator.parse(raw.replace(b'"source":"osm"', b'"source":"osm","source":"osm"'), feed='bumps')
+
+    def test_bumps_revision_is_independent_and_supports_retraction(self):
+        previous = bumps_collection()
+        current = copy.deepcopy(previous)
+        validator.validate_revision(current, previous, feed='bumps')
+        current['features'] = []
+        with self.assertRaises(ValueError):
+            validator.validate_revision(current, previous, feed='bumps')
+        current['revision'] = 2
+        validator.validate_revision(current, previous, feed='bumps')
+        with self.assertRaises(ValueError):
+            validator.validate_revision(previous, current, feed='bumps')
+        roads = collection()
+        roads['revision'] = 50
+        with self.assertRaises(ValueError):
+            validator.validate_revision(current, roads, feed='bumps')
+
+    def test_cli_explicit_feed_validates_bumps_without_rewriting_it(self):
+        with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder) / 'bumps.geojson'
+            original = encoded(bumps_collection())
+            source.write_bytes(original)
+            result = subprocess.run([sys.executable, str(Path(validator.__file__)), str(source), '--feed', 'bumps'], capture_output=True, text=True)
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assertEqual(9, json.loads(result.stdout)['features'])
+            self.assertEqual(original, source.read_bytes())
+
+
 if __name__ == '__main__':
     unittest.main()
