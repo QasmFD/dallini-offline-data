@@ -1,0 +1,63 @@
+name: Refresh Iraq source signs
+
+on:
+  schedule:
+    - cron: '23 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: national-source-signs
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Verify public-data guards
+        run: python3 -m unittest discover -s tools -p 'test_*.py'
+      - name: Install extraction tools in an isolated environment
+        run: |
+          python3 -m venv "$RUNNER_TEMP/signs-env"
+          "$RUNNER_TEMP/signs-env/bin/python" -m pip install --disable-pip-version-check -r tools/hazards-requirements.txt
+      - name: Check official source and prepare a complete validated snapshot
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [[ "$EVENT_NAME" == workflow_dispatch ]]; then
+            "$RUNNER_TEMP/signs-env/bin/python" tools/refresh_hazards.py --verify-current
+          else
+            "$RUNNER_TEMP/signs-env/bin/python" tools/refresh_hazards.py
+          fi
+      - name: Verify prepared data
+        run: |
+          python3 tools/validate_hazards.py hazards/road-hazards.geojson
+          python3 -m unittest discover -s tools -p 'test_*.py'
+      - name: Publish only the two national data files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- hazards/road-hazards.geojson hazards/provenance.json; then
+            echo 'Official source is unchanged; no new edition published.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- hazards/road-hazards.geojson hazards/provenance.json
+          git commit -m 'data: refresh verified Iraq source signs'
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0=http.https://github.com/.extraheader
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          # A concurrent owner commit rejects this push safely. No force or auto-merge.
+          git push origin HEAD:main

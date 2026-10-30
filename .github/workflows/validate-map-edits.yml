@@ -20,7 +20,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Test the public-data validator
-        run: python3 -m unittest discover -s tools -p 'test_validate*.py'
+        run: python3 -m unittest discover -s tools -p 'test_*.py'
       - name: Validate both complete snapshots and independent revisions
         env:
           EVENT_NAME: ${{ github.event_name }}
