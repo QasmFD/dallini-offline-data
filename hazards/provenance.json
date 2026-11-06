@@ -1,20 +1,20 @@
 {
   "asset": "extracted.geojson",
-  "bytes": 1861156,
-  "sha256": "51a8780eb5a6d867048e24832c5fa080e411d5a1c5220f6fee91940870871b0d",
+  "bytes": 1861512,
+  "sha256": "cb785725eb237c93d850d6ea2bd5a2d0a0414db70a5313da89d95ea58b216958",
   "source": "iraq-latest.osm.pbf",
   "source_url": "https://download.geofabrik.de/asia/iraq.html",
-  "osm_timestamp": "2026-11-03T21:24:23Z",
-  "source_sha256": "81278bea23fa37bb1bd8c61feebfb9ee669bdefd3c22b8352754cb848f5b0f89",
-  "source_md5": "d8acb906f3a693c55768eb325f930713",
+  "osm_timestamp": "2026-11-04T21:21:03Z",
+  "source_sha256": "47742261a44160dc45e2e4c047aa9ee8144e9c3ea8a9eb3ca1be3964645d7eb4",
+  "source_md5": "9d941c500885bda084638efadf215105",
   "published_md5_verified": true,
   "latest_snapshot_verified": true,
-  "verified_at": "2026-11-04T12:21:07+00:00",
+  "verified_at": "2026-11-06T12:16:59+00:00",
   "license": "ODbL-1.0",
   "features_by_kind": {
     "police_station": 3042,
     "police_checkpoint": 218,
-    "speed_bump": 1231,
+    "speed_bump": 1232,
     "speed_camera": 396
   },
   "invalid_geometry": 0,
@@ -22,18 +22,18 @@
   "geometry_policy": "Mapped node coordinates; midpoint for linear ways; interior representative point for mapped areas. No fabricated objects or coordinates.",
   "schema": 1,
   "display_snapshot": {
-    "revision": 7,
-    "bytes": 1861271,
-    "sha256": "3a4f6e308940dd7f179bf0dc59dc8219bc65782416ee6fede620bda8f7d4d9ab",
-    "features": 4887,
-    "osm_timestamp": "2026-11-03T21:24:23Z",
-    "source_sha256": "81278bea23fa37bb1bd8c61feebfb9ee669bdefd3c22b8352754cb848f5b0f89",
+    "revision": 8,
+    "bytes": 1861627,
+    "sha256": "bdb21d6603194dd98cf74bc3b14126766319526b673dd2decafbca73aac8280d",
+    "features": 4888,
+    "osm_timestamp": "2026-11-04T21:21:03Z",
+    "source_sha256": "47742261a44160dc45e2e4c047aa9ee8144e9c3ea8a9eb3ca1be3964645d7eb4",
     "features_by_kind": {
       "police_station": 3042,
       "police_checkpoint": 218,
-      "speed_bump": 1231,
+      "speed_bump": 1232,
       "speed_camera": 396
     }
   },
-  "refreshed_at": "2026-11-04T12:21:07.878857+00:00"
+  "refreshed_at": "2026-11-06T12:16:59.556648+00:00"
 }
