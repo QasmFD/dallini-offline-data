@@ -1,18 +1,18 @@
 {
   "asset": "extracted.geojson",
-  "bytes": 1861512,
-  "sha256": "cb785725eb237c93d850d6ea2bd5a2d0a0414db70a5313da89d95ea58b216958",
+  "bytes": 1861158,
+  "sha256": "eb49676c7fb1399f2d3af6545ece4b2941269ea13d867b37c1260ebe776227a0",
   "source": "iraq-latest.osm.pbf",
   "source_url": "https://download.geofabrik.de/asia/iraq.html",
-  "osm_timestamp": "2026-11-04T21:21:03Z",
-  "source_sha256": "47742261a44160dc45e2e4c047aa9ee8144e9c3ea8a9eb3ca1be3964645d7eb4",
-  "source_md5": "9d941c500885bda084638efadf215105",
+  "osm_timestamp": "2026-11-05T21:23:02Z",
+  "source_sha256": "06dc6c89505b25b84768bab15c1e9f01a6a3e61a004a4f65f3dad33780239ceb",
+  "source_md5": "c67dbed46d5547f0bbc80b45f165fec4",
   "published_md5_verified": true,
   "latest_snapshot_verified": true,
-  "verified_at": "2026-11-06T12:16:59+00:00",
+  "verified_at": "2026-11-07T11:12:30+00:00",
   "license": "ODbL-1.0",
   "features_by_kind": {
-    "police_station": 3042,
+    "police_station": 3041,
     "police_checkpoint": 218,
     "speed_bump": 1232,
     "speed_camera": 396
@@ -22,18 +22,18 @@
   "geometry_policy": "Mapped node coordinates; midpoint for linear ways; interior representative point for mapped areas. No fabricated objects or coordinates.",
   "schema": 1,
   "display_snapshot": {
-    "revision": 8,
-    "bytes": 1861627,
-    "sha256": "bdb21d6603194dd98cf74bc3b14126766319526b673dd2decafbca73aac8280d",
-    "features": 4888,
-    "osm_timestamp": "2026-11-04T21:21:03Z",
-    "source_sha256": "47742261a44160dc45e2e4c047aa9ee8144e9c3ea8a9eb3ca1be3964645d7eb4",
+    "revision": 9,
+    "bytes": 1861273,
+    "sha256": "23637796406108cd1f6b18b74c7a4a77b528487ebeba8237603602573521fd33",
+    "features": 4887,
+    "osm_timestamp": "2026-11-05T21:23:02Z",
+    "source_sha256": "06dc6c89505b25b84768bab15c1e9f01a6a3e61a004a4f65f3dad33780239ceb",
     "features_by_kind": {
-      "police_station": 3042,
+      "police_station": 3041,
       "police_checkpoint": 218,
       "speed_bump": 1232,
       "speed_camera": 396
     }
   },
-  "refreshed_at": "2026-11-06T12:16:59.556648+00:00"
+  "refreshed_at": "2026-11-07T11:12:30.406851+00:00"
 }
