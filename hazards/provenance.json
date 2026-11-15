@@ -1,15 +1,15 @@
 {
   "asset": "extracted.geojson",
   "bytes": 1861332,
-  "sha256": "b955c2f7d8bc72444c38a8c9fbb98e550d56017cdc6cc7c39112da30d6f74ae9",
+  "sha256": "3a0b0e422ee5298d52851fe677d52b87f52658571dcc7ccef4dc07d4be88c43c",
   "source": "iraq-latest.osm.pbf",
   "source_url": "https://download.geofabrik.de/asia/iraq.html",
-  "osm_timestamp": "2026-11-13T21:22:20Z",
-  "source_sha256": "62728429b374d74b31d1162010a6cb867212e0079e18b9d20c78ce801167b21c",
-  "source_md5": "f9e7477148b5c88d96450987db0bf04e",
+  "osm_timestamp": "2026-11-14T21:20:41Z",
+  "source_sha256": "038f5cd2df70a9830dba36a68cc4eea674c02c8689bbda4c16d054fc169bee81",
+  "source_md5": "6f429e37ea78f46009579686eb152d5d",
   "published_md5_verified": true,
   "latest_snapshot_verified": true,
-  "verified_at": "2026-11-14T11:38:21+00:00",
+  "verified_at": "2026-11-15T12:04:59+00:00",
   "license": "ODbL-1.0",
   "features_by_kind": {
     "police_station": 3033,
@@ -22,12 +22,12 @@
   "geometry_policy": "Mapped node coordinates; midpoint for linear ways; interior representative point for mapped areas. No fabricated objects or coordinates.",
   "schema": 1,
   "display_snapshot": {
-    "revision": 15,
+    "revision": 16,
     "bytes": 1861448,
-    "sha256": "f95ada4d39063dfba835c287b5612ea65a94f822104b90807fe6c06345497486",
+    "sha256": "3f6d2d9a3dc7db5b1063d3764dba54f8d1645d9c5f35ee523e634bbbdfd81960",
     "features": 4888,
-    "osm_timestamp": "2026-11-13T21:22:20Z",
-    "source_sha256": "62728429b374d74b31d1162010a6cb867212e0079e18b9d20c78ce801167b21c",
+    "osm_timestamp": "2026-11-14T21:20:41Z",
+    "source_sha256": "038f5cd2df70a9830dba36a68cc4eea674c02c8689bbda4c16d054fc169bee81",
     "features_by_kind": {
       "police_station": 3033,
       "police_checkpoint": 218,
@@ -35,5 +35,5 @@
       "speed_camera": 396
     }
   },
-  "refreshed_at": "2026-11-14T11:38:21.474102+00:00"
+  "refreshed_at": "2026-11-15T12:04:59.828269+00:00"
 }
