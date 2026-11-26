@@ -1,8 +1,12 @@
 from datetime import datetime, timedelta
 import hashlib
+import io
 import json
 from pathlib import Path
+import socket
 import unittest
+from unittest import mock
+import urllib.error
 import urllib.request
 
 import refresh_hazards as refresh
@@ -48,6 +52,12 @@ class RefreshTests(unittest.TestCase):
 
     def test_official_metadata_requires_one_timestamp_and_exact_checksum_name(self):
         self.assertEqual('2026-10-28T21:21:02Z', refresh.page_timestamp('all OSM data up to 2026-10-28T21:21:02Z.'))
+        self.assertEqual('2026-11-24T21:21:23Z', refresh.page_timestamp(
+            'contains all OSM data up to <time title="Tuesday, 24.11.2026, 21:21:23 UTC", '
+            'datetime="2026-11-24T21:21:23+00:00">1 day ago</time>.'))
+        for page in ('all OSM data up to <time datetime="2026-11-24T21:21:23+03:00">',
+                     'all OSM data up to 2026-10-28T21:21:02Z. all OSM data up to 2026-10-29T21:21:02Z.'):
+            with self.assertRaises(ValueError): refresh.page_timestamp(page)
         self.assertEqual('a'*32, refresh.checksum('a'*32 + '  iraq-latest.osm.pbf\n'))
         for value in ('a'*32 + ' other.osm.pbf', '<html>Error</html>'):
             with self.assertRaises(ValueError): refresh.checksum(value)
@@ -66,6 +76,55 @@ class RefreshTests(unittest.TestCase):
                 handler.redirect_request(request, None, 302, 'Found', {}, url)
         with self.assertRaises(ValueError):
             handler.redirect_request(redirected, None, 302, 'Found', {}, target)
+
+    def test_transient_network_faults_retry_three_times_with_backoff(self):
+        calls, sleeps = [], []
+        def flaky(name, limit, output=None):
+            calls.append(name)
+            if len(calls) < 3:
+                raise urllib.error.URLError(OSError(101, 'Network is unreachable'))
+            return b'ok'
+        with mock.patch.object(refresh, 'fetch_once', flaky):
+            self.assertEqual(b'ok', refresh.fetch('index.html', 1024, sleep=sleeps.append))
+            self.assertEqual([5, 10], sleeps)
+            calls.clear()
+            def always(name, limit, output=None):
+                calls.append(name)
+                raise urllib.error.HTTPError(name, 503, 'busy', {}, None)
+            with mock.patch.object(refresh, 'fetch_once', always), self.assertRaises(urllib.error.HTTPError):
+                refresh.fetch('index.html', 1024, sleep=lambda s: None)
+            self.assertEqual(3, len(calls))
+
+    def test_guard_failures_and_client_errors_are_not_retried(self):
+        for error in (ValueError('Unexpected source redirect'), urllib.error.HTTPError('u', 404, 'missing', {}, None)):
+            calls = []
+            def fail(name, limit, output=None):
+                calls.append(name)
+                raise error
+            with self.subTest(error=error), mock.patch.object(refresh, 'fetch_once', fail), self.assertRaises(type(error)):
+                refresh.fetch('index.html', 1024, sleep=lambda s: self.fail('must not retry'))
+            self.assertEqual(1, len(calls))
+
+    def test_retry_discards_partial_download_bytes(self):
+        stream, calls = io.BytesIO(), []
+        def partial(name, limit, output=None):
+            calls.append(name)
+            output.write(b'partial' if len(calls) == 1 else b'full')
+            if len(calls) == 1:
+                raise TimeoutError()
+            return b''
+        with mock.patch.object(refresh, 'fetch_once', partial):
+            refresh.fetch('iraq-latest.osm.pbf', 1024, stream, sleep=lambda s: None)
+        self.assertEqual(b'full', stream.getvalue())
+
+    def test_ipv4_addresses_are_tried_first_and_resolver_restored(self):
+        original = socket.getaddrinfo
+        v6 = (socket.AF_INET6, socket.SOCK_STREAM, 6, '', ('::1', 443, 0, 0))
+        v4 = (socket.AF_INET, socket.SOCK_STREAM, 6, '', ('127.0.0.1', 443))
+        with mock.patch.object(socket, 'getaddrinfo', lambda *a, **k: [v6, v4]):
+            with refresh.ipv4_first():
+                self.assertEqual([v4, v6], socket.getaddrinfo('download.geofabrik.de', 443))
+        self.assertIs(original, socket.getaddrinfo)
 
 
 if __name__ == '__main__':

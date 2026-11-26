@@ -1,18 +1,43 @@
 """Refresh the public Iraq sign snapshot; never writes owner edits or routing data."""
 from datetime import datetime, timezone
+from contextlib import contextmanager
 import argparse
 import hashlib
+import http.client
 import json
 from pathlib import Path
 import re
+import socket
 import tempfile
 import time
+import urllib.error
 import urllib.request
 
 from validate_hazards import parse, read, validate_revision
 
-ORIGIN = 'https://download.geofabrik.de/asia/'
+ORIGIN = 'https://download.geofabrik.de/asia/iraq/'
 MAX_SOURCE = 200 * 1024 * 1024
+ATTEMPTS = 3
+BACKOFF_SECONDS = 5
+
+
+@contextmanager
+def ipv4_first():
+    """Try IPv4 addresses before IPv6; GitHub runners have no IPv6 route (Errno 101)."""
+    original = socket.getaddrinfo
+    def ordered(*args, **kwargs):
+        return sorted(original(*args, **kwargs), key=lambda info: info[0] != socket.AF_INET)
+    socket.getaddrinfo = ordered
+    try:
+        yield
+    finally:
+        socket.getaddrinfo = original
+
+
+def transient(error):
+    if isinstance(error, urllib.error.HTTPError):
+        return error.code == 429 or 500 <= error.code < 600
+    return isinstance(error, (urllib.error.URLError, TimeoutError, ConnectionError, http.client.IncompleteRead))
 
 
 def encode(value):
@@ -20,7 +45,10 @@ def encode(value):
 
 
 def page_timestamp(text):
-    values = re.findall(r'all OSM data up to\s*(?:<[^>]+>)*\s*(20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)', text)
+    # Geofabrik's current page wraps the UTC date in <time datetime="...+00:00">.
+    values = [legacy or current + 'Z' for current, legacy in re.findall(
+        r'all OSM data up to\s*(?:<time\b[^>]*\bdatetime="(20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})\+00:00"[^>]*>'
+        r'|(?:<[^>]+>)*\s*(20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z))', text)]
     if len(values) != 1:
         raise ValueError('Official source page must expose one snapshot timestamp')
     datetime.strptime(values[0], '%Y-%m-%dT%H:%M:%SZ')
@@ -44,9 +72,25 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(request, fp, code, msg, headers, newurl)
 
 
-def fetch(name, limit, output=None):
-    if name not in ('iraq.html', 'iraq-latest.osm.pbf.md5', 'iraq-latest.osm.pbf'):
+def fetch(name, limit, output=None, *, sleep=time.sleep):
+    if name not in ('index.html', 'iraq-latest.osm.pbf.md5', 'iraq-latest.osm.pbf'):
         raise ValueError('Unknown source resource')
+    for attempt in range(ATTEMPTS):
+        if output is not None:
+            output.seek(0)
+            output.truncate()
+        try:
+            with ipv4_first():
+                return fetch_once(name, limit, output)
+        except Exception as error:
+            # Guard failures (ValueError) are never retried; only bounded network faults are.
+            if not transient(error) or attempt == ATTEMPTS - 1:
+                raise
+            print(json.dumps({'retry': name, 'attempt': attempt + 1, 'error': repr(error)}), flush=True)
+            sleep(BACKOFF_SECONDS * 2 ** attempt)
+
+
+def fetch_once(name, limit, output=None):
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
     request = urllib.request.Request(ORIGIN + name, headers={'User-Agent': 'Dallini-public-map-refresh/1.0', 'Accept-Encoding': 'identity'})
     start, chunks, size = time.monotonic(), [], 0
@@ -96,7 +140,7 @@ def main():
     current_path = folder / 'road-hazards.geojson'
     previous_bytes = current_path.read_bytes()
     previous = parse(previous_bytes)
-    page = fetch('iraq.html', 1024 * 1024).decode('utf-8')
+    page = fetch('index.html', 1024 * 1024).decode('utf-8')
     timestamp = page_timestamp(page)
     expected = checksum(fetch('iraq-latest.osm.pbf.md5', 1024).decode('ascii'))
     if timestamp < previous['osm_timestamp']:

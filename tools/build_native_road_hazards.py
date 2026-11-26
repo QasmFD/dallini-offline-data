@@ -140,7 +140,7 @@ def build(source, output=DEFAULT_OUTPUT, expected_md5=None, latest_timestamp=Non
                   'osm_timestamp': timestamp, 'features': handler.features}
     payload = json.dumps(collection, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
     manifest = {'asset': output.name, 'bytes': len(payload), 'sha256': hashlib.sha256(payload).hexdigest(),
-                'source': source.name, 'source_url': 'https://download.geofabrik.de/asia/iraq.html',
+                'source': source.name, 'source_url': 'https://download.geofabrik.de/asia/iraq/index.html',
                 'osm_timestamp': timestamp, 'source_sha256': file_digest(source, 'sha256'),
                 'source_md5': actual_md5, 'published_md5_verified': expected_md5 is not None,
                 'latest_snapshot_verified': latest_timestamp is not None,
