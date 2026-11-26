@@ -63,51 +63,68 @@ class RefreshTests(unittest.TestCase):
             with self.assertRaises(ValueError): refresh.checksum(value)
         with self.assertRaises(ValueError): refresh.page_timestamp('missing source date')
 
-    def test_source_redirect_allows_only_one_official_dated_extract(self):
+    def test_source_redirect_allows_only_one_dated_extract_within_the_same_origin(self):
         handler = refresh.NoRedirect()
-        request = urllib.request.Request(refresh.ORIGIN + 'iraq-latest.osm.pbf')
-        target = refresh.ORIGIN + 'iraq-261028.osm.pbf'
-        redirected = handler.redirect_request(request, None, 302, 'Found', {}, target)
-        self.assertEqual(target, redirected.full_url)
-        for url in ('http://download.geofabrik.de/asia/iraq-261028.osm.pbf',
-                    'https://example.com/iraq-261028.osm.pbf',
-                    refresh.ORIGIN + 'iran-261028.osm.pbf', target + '?extra=1'):
-            with self.subTest(url=url), self.assertRaises(ValueError):
-                handler.redirect_request(request, None, 302, 'Found', {}, url)
-        with self.assertRaises(ValueError):
-            handler.redirect_request(redirected, None, 302, 'Found', {}, target)
+        for origin in refresh.ORIGINS:
+            request = urllib.request.Request(origin + 'iraq-latest.osm.pbf')
+            target = origin + 'iraq-261028.osm.pbf'
+            redirected = handler.redirect_request(request, None, 302, 'Found', {}, target)
+            self.assertEqual(target, redirected.full_url)
+            other = next(o for o in refresh.ORIGINS if o != origin)
+            for url in ('http://download.geofabrik.de/asia/iraq/iraq-261028.osm.pbf',
+                        'https://download.geofabrik.de/asia/iraq-261028.osm.pbf',
+                        'https://example.com/iraq-261028.osm.pbf', other + 'iraq-261028.osm.pbf',
+                        origin + 'iran-261028.osm.pbf', target + '?extra=1'):
+                with self.subTest(url=url), self.assertRaises(ValueError):
+                    handler.redirect_request(request, None, 302, 'Found', {}, url)
+            with self.assertRaises(ValueError):
+                handler.redirect_request(redirected, None, 302, 'Found', {}, target)
 
-    def test_transient_network_faults_retry_three_times_with_backoff(self):
+    def test_unreachable_primary_falls_back_to_relay_without_backoff(self):
+        seen, sleeps = [], []
+        def primary_down(name, limit, output=None, *, origin, timeout):
+            seen.append((origin, timeout))
+            if origin == refresh.ORIGIN:
+                raise urllib.error.URLError(OSError(101, 'Network is unreachable'))
+            return b'ok'
+        with mock.patch.object(refresh, 'fetch_once', primary_down):
+            self.assertEqual(b'ok', refresh.fetch('index.html', 1024, sleep=sleeps.append))
+        self.assertEqual([(refresh.ORIGIN, 8), (refresh.RELAY, 60)], seen)
+        self.assertEqual([], sleeps)
+
+    def test_transient_network_faults_retry_three_rounds_with_backoff(self):
         calls, sleeps = [], []
-        def flaky(name, limit, output=None):
+        def flaky(name, limit, output=None, **kwargs):
             calls.append(name)
             if len(calls) < 3:
                 raise urllib.error.URLError(OSError(101, 'Network is unreachable'))
             return b'ok'
         with mock.patch.object(refresh, 'fetch_once', flaky):
             self.assertEqual(b'ok', refresh.fetch('index.html', 1024, sleep=sleeps.append))
-            self.assertEqual([5, 10], sleeps)
-            calls.clear()
-            def always(name, limit, output=None):
-                calls.append(name)
-                raise urllib.error.HTTPError(name, 503, 'busy', {}, None)
-            with mock.patch.object(refresh, 'fetch_once', always), self.assertRaises(urllib.error.HTTPError):
-                refresh.fetch('index.html', 1024, sleep=lambda s: None)
-            self.assertEqual(3, len(calls))
+        self.assertEqual([5], sleeps)
+        calls.clear()
+        sleeps.clear()
+        def always(name, limit, output=None, **kwargs):
+            calls.append(name)
+            raise urllib.error.HTTPError(name, 503, 'busy', {}, None)
+        with mock.patch.object(refresh, 'fetch_once', always), self.assertRaises(urllib.error.HTTPError):
+            refresh.fetch('index.html', 1024, sleep=sleeps.append)
+        self.assertEqual(6, len(calls))
+        self.assertEqual([5, 10], sleeps)
 
-    def test_guard_failures_and_client_errors_are_not_retried(self):
+    def test_guard_failures_and_client_errors_are_not_retried_or_relayed(self):
         for error in (ValueError('Unexpected source redirect'), urllib.error.HTTPError('u', 404, 'missing', {}, None)):
             calls = []
-            def fail(name, limit, output=None):
-                calls.append(name)
+            def fail(name, limit, output=None, **kwargs):
+                calls.append(kwargs['origin'])
                 raise error
             with self.subTest(error=error), mock.patch.object(refresh, 'fetch_once', fail), self.assertRaises(type(error)):
                 refresh.fetch('index.html', 1024, sleep=lambda s: self.fail('must not retry'))
-            self.assertEqual(1, len(calls))
+            self.assertEqual([refresh.ORIGIN], calls)
 
     def test_retry_discards_partial_download_bytes(self):
         stream, calls = io.BytesIO(), []
-        def partial(name, limit, output=None):
+        def partial(name, limit, output=None, **kwargs):
             calls.append(name)
             output.write(b'partial' if len(calls) == 1 else b'full')
             if len(calls) == 1:

@@ -16,6 +16,10 @@ import urllib.request
 from validate_hazards import parse, read, validate_revision
 
 ORIGIN = 'https://download.geofabrik.de/asia/iraq/'
+# Verbatim Iraq-only read-only relay (deploy/mobile-info/worker.mjs) used when hosted
+# runners cannot connect to Geofabrik; every content guard below still applies.
+RELAY = 'https://dallini-mobile-info.qasm.workers.dev/osm-iraq/'
+ORIGINS = (ORIGIN, RELAY)
 MAX_SOURCE = 200 * 1024 * 1024
 ATTEMPTS = 3
 BACKOFF_SECONDS = 5
@@ -63,11 +67,12 @@ def checksum(text):
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
-    """Only Geofabrik's latest-to-dated PBF alias may redirect, once."""
+    """Only the latest-to-dated PBF alias may redirect, once, within the same approved origin."""
     def redirect_request(self, request, fp, code, msg, headers, newurl):
-        if (request.full_url != ORIGIN + 'iraq-latest.osm.pbf' or request.get_method() != 'GET'
+        origin = next((o for o in ORIGINS if request.full_url == o + 'iraq-latest.osm.pbf'), None)
+        if (origin is None or request.get_method() != 'GET'
                 or code not in (301, 302, 303, 307, 308)
-                or re.fullmatch(re.escape(ORIGIN) + r'iraq-\d{6}\.osm\.pbf', newurl) is None):
+                or re.fullmatch(re.escape(origin) + r'iraq-\d{6}\.osm\.pbf', newurl) is None):
             raise ValueError('Unexpected source redirect')
         return super().redirect_request(request, fp, code, msg, headers, newurl)
 
@@ -76,25 +81,29 @@ def fetch(name, limit, output=None, *, sleep=time.sleep):
     if name not in ('index.html', 'iraq-latest.osm.pbf.md5', 'iraq-latest.osm.pbf'):
         raise ValueError('Unknown source resource')
     for attempt in range(ATTEMPTS):
-        if output is not None:
-            output.seek(0)
-            output.truncate()
-        try:
-            with ipv4_first():
-                return fetch_once(name, limit, output)
-        except Exception as error:
-            # Guard failures (ValueError) are never retried; only bounded network faults are.
-            if not transient(error) or attempt == ATTEMPTS - 1:
-                raise
-            print(json.dumps({'retry': name, 'attempt': attempt + 1, 'error': repr(error)}), flush=True)
-            sleep(BACKOFF_SECONDS * 2 ** attempt)
+        for origin, timeout in ((ORIGIN, 8), (RELAY, 60)):
+            if output is not None:
+                output.seek(0)
+                output.truncate()
+            try:
+                with ipv4_first():
+                    return fetch_once(name, limit, output, origin=origin, timeout=timeout)
+            except Exception as error:
+                # Guard failures (ValueError) are never retried; only bounded network faults fall back.
+                if not transient(error):
+                    raise
+                last = error
+                print(json.dumps({'retry': name, 'origin': origin, 'attempt': attempt + 1, 'error': repr(error)}), flush=True)
+        if attempt == ATTEMPTS - 1:
+            raise last
+        sleep(BACKOFF_SECONDS * 2 ** attempt)
 
 
-def fetch_once(name, limit, output=None):
+def fetch_once(name, limit, output=None, *, origin=ORIGIN, timeout=60):
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
-    request = urllib.request.Request(ORIGIN + name, headers={'User-Agent': 'Dallini-public-map-refresh/1.0', 'Accept-Encoding': 'identity'})
+    request = urllib.request.Request(origin + name, headers={'User-Agent': 'Dallini-public-map-refresh/1.0', 'Accept-Encoding': 'identity'})
     start, chunks, size = time.monotonic(), [], 0
-    with opener.open(request, timeout=60) as response:
+    with opener.open(request, timeout=timeout) as response:
         if response.status != 200 or response.headers.get('Content-Encoding', 'identity') != 'identity':
             raise ValueError('Unexpected source response')
         declared = response.headers.get('Content-Length')
