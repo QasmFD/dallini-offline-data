@@ -1,39 +1,39 @@
 {
   "asset": "extracted.geojson",
-  "bytes": 1859155,
-  "sha256": "dc0c3669c576213fbe39937515ddd45c89b79a6948cb9feef51fbb602d5b72ce",
+  "bytes": 1855758,
+  "sha256": "d791ca9e24eda1b4b71bcb7748bab4ec3e5a87e5897374f904315b4222af12f1",
   "source": "iraq-latest.osm.pbf",
-  "source_url": "https://download.geofabrik.de/asia/iraq.html",
-  "osm_timestamp": "2026-11-16T21:22:36Z",
-  "source_sha256": "c4895412a1aa8e83e683227c149031153974ed9589486cce0c4abd1ed23663ed",
-  "source_md5": "0b3cef212eb6a85aedcb1ff7f2826dea",
+  "source_url": "https://download.geofabrik.de/asia/iraq/index.html",
+  "osm_timestamp": "2026-11-24T21:21:23Z",
+  "source_sha256": "752b8e9fdb182581c6daecf77760e7370002b9c4c21e961689f88105b18c3397",
+  "source_md5": "5eeeea49efbec6959b65b23c3726f42b",
   "published_md5_verified": true,
   "latest_snapshot_verified": true,
-  "verified_at": "2026-11-17T13:40:04+00:00",
+  "verified_at": "2026-11-26T02:02:37+00:00",
   "license": "ODbL-1.0",
   "features_by_kind": {
-    "police_station": 3030,
-    "police_checkpoint": 218,
-    "speed_bump": 1240,
-    "speed_camera": 394
+    "police_station": 3021,
+    "police_checkpoint": 216,
+    "speed_bump": 1241,
+    "speed_camera": 395
   },
   "invalid_geometry": 0,
   "coverage": "All relevant source-recorded nodes, ways, and areas in the Iraq extract. OSM survey coverage is incomplete; these are not live officer locations.",
   "geometry_policy": "Mapped node coordinates; midpoint for linear ways; interior representative point for mapped areas. No fabricated objects or coordinates.",
   "schema": 1,
   "display_snapshot": {
-    "revision": 18,
-    "bytes": 1859271,
-    "sha256": "a817ae96235936934b1eb1cd4b2f4d3886ddf76c06c8990ad26fb331764f4d56",
-    "features": 4882,
-    "osm_timestamp": "2026-11-16T21:22:36Z",
-    "source_sha256": "c4895412a1aa8e83e683227c149031153974ed9589486cce0c4abd1ed23663ed",
+    "revision": 19,
+    "bytes": 1855874,
+    "sha256": "444a308d108ef4a0009bb64b99878b47ccf2bd01174b91e83c35d32aff0261b0",
+    "features": 4873,
+    "osm_timestamp": "2026-11-24T21:21:23Z",
+    "source_sha256": "752b8e9fdb182581c6daecf77760e7370002b9c4c21e961689f88105b18c3397",
     "features_by_kind": {
-      "police_station": 3030,
-      "police_checkpoint": 218,
-      "speed_bump": 1240,
-      "speed_camera": 394
+      "police_station": 3021,
+      "police_checkpoint": 216,
+      "speed_bump": 1241,
+      "speed_camera": 395
     }
   },
-  "refreshed_at": "2026-11-17T13:40:04.547039+00:00"
+  "refreshed_at": "2026-11-26T02:02:38.243735+00:00"
 }
